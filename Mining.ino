@@ -16,6 +16,7 @@
   
   History:
   
+  v1.5	13/9/14 Changed the movement to another function of its own
   v1.4  10/9/14 added manual control to the code.
   v1.3  5/9/14  initial implementation
 		changed ClampControl to boolean
@@ -41,7 +42,11 @@
 //Constant
 #define SOS 0.34029                //Speed of Sound in mm/us
 
-
+//temporary
+#define FORWARD 1
+#define LEFT 2
+#define RIGHT 3
+#define STOP 4
 
 //-----------------------------------------------------------------------------------------------------
 //Const pins
@@ -95,6 +100,7 @@ void manualCtrl();
 void shutdown();
 void locate();
 void forward();
+void moveCtrl(int dir);
 float Ping(int echo);
 
 
@@ -187,6 +193,27 @@ float Ping(int echo){
   return distance;                          //return distance in mm
 }
 
+void moveCtrl(int dir){
+	switch(dir){
+		case FORWARD:
+			digitalWrite(motPin1, HIGH);               //Start all motors
+  		digitalWrite(motPin2, HIGH);
+  		break;
+  	case LEFT:
+  		digitalWrite(motPin1, LOW);               //Start all motors
+  		digitalWrite(motPin2, HIGH);
+  		break;
+  	case RIGHT:
+  		digitalWrite(motPin1, HIGH);               //Start all motors
+  		digitalWrite(motPin2, LOW);
+  		break;
+  	case STOP:
+  		digitalWrite(motPin1, LOW);               //Start all motors
+  		digitalWrite(motPin2, LOW);
+  		break;
+  }
+}
+
 void forward(){
   
   int timer;                                  //timer that will check how long motors run for
@@ -201,13 +228,12 @@ void forward(){
   timer = (distance - DISPLACEMENT) / SPEED; //calculate time it needs to run at
   
   
-  digitalWrite(motPin1, HIGH);               //Start all motors
-  digitalWrite(motPin2, HIGH);
-  digitalWrite(motEnable, HIGH);
+  moveCtrl(FORWARD);               				 	 //move forward
+  
   
   delay(timer);                              //delay to stop using precalculated time
   
-  digitalWrite(motEnable, LOW);              //Stop all motors]
+  moveCtrl(STOP);                            //Stop vehicle
 }
 
 void locate(){
@@ -227,21 +253,17 @@ void locate(){
     //drive logic 
     if(Left > Right){                                       //decide which way to rotate
     
-      digitalWrite(motPin1, LOW);                           //rotate counter clockwise with logic (0|1)
-      digitalWrite(motPin2, HIGH);
-      digitalWrite(motEnable, HIGH);
+      moveCtrl(RIGHT);                           						//rotate clockwise
     } else {
       
-      digitalWrite(motPin1, HIGH);                          //rotate clockwise with logic (1|0)
-      digitalWrite(motPin2, LOW);
-      digitalWrite(motEnable, HIGH);
+      moveCtrl(LEFT);                          							//rotate counter clockwise
     }      
     
     Left = Ping(LRec);                                      //get new left values
     Right = Ping(RRec);                                     //get new right values
   } while(Left > (Right + 5) || Left < (Right - 5));        //variance of +-5mm as the sensors come with an accuracy of 2%.
   
-  digitalWrite(motEnable, LOW);                             //Stop all motors
+  moveCtrl(STOP);                             							//Stop all movement
 }
 
 
@@ -317,7 +339,7 @@ void manualCtrl(){
   digitalWrite(clcPin, LOW);
   digitalWrite(rota, LOW);
   digitalWrite(Trigger, LOW);
-  digitalWrite(motEnable, LOW);
+  moveCtrl(STOP);
   
   //turn off interrupts
   noInterrupts();
@@ -335,56 +357,36 @@ void manualCtrl(){
         
         Serial.println("Moving Forward");                                //acknowledge command received
         
-        digitalWrite(motPin1, HIGH);                                     //set motor control
-        digitalWrite(motPin2, HIGH);
-        digitalWrite(motEnable, HIGH);                                   //enable motor
+        moveCtrl(FORWARD);                                    					 //set motor control
         
         while(Serial.read()!='s'){                                       //wait for stop signal
         }
         
-        digitalWrite(motEnable, LOW);                                    //disable motor
+        moveCtrl(STOP);                                    							 //stop motor
         break;
         
       case 'a':
         
         Serial.println("Rotating CounterClockwise");                     //acknowledge command received
         
-        digitalWrite(motPin1, LOW);                                      //set motor values
-        digitalWrite(motPin2, HIGH);
-        digitalWrite(motEnable, HIGH);                                   //enable motor
+        moveCtrl(LEFT);                                      						 //set motor values
         
         while(Serial.read()!='s'){                                       //wait for stop signal
         }
         
-        digitalWrite(motEnable, LOW);                                    //stop motor
+        moveCtrl(STOP);                                    							 //stop motor
         break;
         
       case 'd':
       
         Serial.println("Rotating Clockwise");                            //acknowledge command received
         
-        digitalWrite(motPin1, HIGH);                                     //set the motors to correct position
-        digitalWrite(motPin2, LOW);
-        digitalWrite(motEnable, HIGH);                                   //enable motors
+        moveCtrl(RIGHT);                                      					 //set motor values
         
         while(Serial.read()!='s'){                                       //wait for stop signal
         }
         
-        digitalWrite(motEnable, LOW);                                    //stop motor
-        break;
-        
-      case 's':
-        
-        Serial.println("Moving Backward");                               //show command received
-        
-        digitalWrite(motPin1, LOW);                                      //set the motors to correct position
-        digitalWrite(motPin2, LOW);
-        digitalWrite(motEnable, HIGH);                                   //enable motors
-        
-        while(Serial.read()!='s'){                                       //wait for stop signal
-        }
-        
-        digitalWrite(motEnable, LOW);                                    //stop motor
+        moveCtrl(STOP);                                    							 //stop motor
         break;
         
       case 'u':
@@ -485,15 +487,6 @@ void manualCtrl(){
     
     command = Serial.read();                                             //read command
     
-  }
-  
-  switch(state){
-    case 0:
-      
-      break;
-    case 1:
-      
-      break;
   }
   
   interrupts();
