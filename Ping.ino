@@ -9,7 +9,9 @@ as the basis to simplify the program code.
   z5019205
   
   History:
-  
+  v1.2  13/9/14 Another edit to use the NewPing library that is written
+                online. The sensors work, will need to specifically
+                calibrate it during the test runs.
   v1.1  11/9/14 Rewrote ping test code
   v1.0  8/9/14  Wrote code to test ping function.
 */
@@ -45,7 +47,7 @@ NewPing cenPing(Ctrig, CRec, 125);
 NewPing rightPing(Rtrig, RRec, 125);
 
 
-
+int aval;
 //-----------------------------------------------------------------------------------------------------
 // main
 //-----------------------------------------------------------------------------------------------------
@@ -72,25 +74,11 @@ void setup(){
 
 //loop function
 void loop (){                                      //to test the ping function.
-  /*
-  timer = micros();
-  
-  Left = Ping(LRec);
-  Centre = Ping(CRec);
-  Right = Ping(RRec);
-  
-  Serial.print(micros()-timer);
-  Serial.print(":");
-  Serial.print(Left);
-  Serial.print("-");
-  Serial.print(Centre);
-  Serial.print("-");
-  Serial.println(Right);*/
   
   aval = micros();
   
   Left = leftPing.ping_median() * SOS;
-  Centre = centPing.ping_median() * SOS;
+  Centre = cenPing.ping_median() * SOS;
   Right = rightPing.ping_median() * SOS;
   
   Serial.print(micros()-aval);
@@ -104,4 +92,3 @@ void loop (){                                      //to test the ping function.
   delay(1000);
   
 }
-
