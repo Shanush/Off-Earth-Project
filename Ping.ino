@@ -15,6 +15,10 @@ as the basis to simplify the program code.
 */
 
 #include <NewPing.h>
+/*http://playground.arduino.cc/Code/NewPing
+This is a ping library written by Tim Eckel to use the
+HC-S04 ultrasound sensor. The library can return a median
+of pings as well as time in microseconds*/
 
 
 //Constant
@@ -35,7 +39,11 @@ float Left;
 float Right;
 float Centre;
 
-float Ping(int trig, int echo);
+
+NewPing leftPing(Ltrig, LRec, 125);
+NewPing cenPing(Ctrig, CRec, 125);
+NewPing rightPing(Rtrig, RRec, 125);
+
 
 
 //-----------------------------------------------------------------------------------------------------
@@ -63,7 +71,7 @@ void setup(){
 }
 
 //loop function
-void loop (){                                      //loop has been simplified as it may change to manual control
+void loop (){                                      //to test the ping function.
   /*
   timer = micros();
   
@@ -81,9 +89,9 @@ void loop (){                                      //loop has been simplified as
   
   aval = micros();
   
-  Left = Ping(Ltrig, LRec);
-  Centre = Ping(Ctrig, CRec);
-  Right = Ping(Rtrig, RRec);
+  Left = leftPing.ping_median() * SOS;
+  Centre = centPing.ping_median() * SOS;
+  Right = rightPing.ping_median() * SOS;
   
   Serial.print(micros()-aval);
   Serial.print(":");
@@ -97,17 +105,3 @@ void loop (){                                      //loop has been simplified as
   
 }
 
-
-float Ping(int trig, int echo){
-  float distance = 0;                       //declare internal variables
-  float average = 0;
-  int timer[5];
-  int temp;
-  for(int i = 0; i < 5; i++){
-    timer[i] = ;             //calculate ping difference
-    average = average + float(timer[i]);                    //adds data to a total
-  }
-  average /= 5;                             //averages data
-  distance = average * SOS;                 //convert to distance
-  return distance;                          //return distance in mm
-}
