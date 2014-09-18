@@ -177,7 +177,6 @@ float Ping(int echo){
     digitalWrite(Trigger, HIGH);            
     delayMicroseconds(10);                  //Triggerger signal for 10us to make sure the device knows to Triggerger
     digitalWrite(Trigger, LOW);             //stop Triggerger
-    
     aval = micros();                        //read time since device began functioning
     
     while(digitalRead(echo)==HIGH){         //pause until no return ping heard
@@ -196,18 +195,25 @@ float Ping(int echo){
 void moveCtrl(int dir){
 	switch(dir){
 		case FORWARD:
+			
 			digitalWrite(motPin1, HIGH);               //Start all motors
   		digitalWrite(motPin2, HIGH);
   		break;
+  		
   	case LEFT:
+  		
   		digitalWrite(motPin1, LOW);               //Start all motors
   		digitalWrite(motPin2, HIGH);
   		break;
+  		
   	case RIGHT:
+  		
   		digitalWrite(motPin1, HIGH);               //Start all motors
   		digitalWrite(motPin2, LOW);
   		break;
+  		
   	case STOP:
+  		
   		digitalWrite(motPin1, LOW);               //Start all motors
   		digitalWrite(motPin2, LOW);
   		break;
@@ -216,6 +222,7 @@ void moveCtrl(int dir){
 
 void forward(){
   
+  //declare local variables
   int timer;                                  //timer that will check how long motors run for
   float distance;
   
@@ -224,15 +231,10 @@ void forward(){
   */
   
   distance = Ping(CRec);                     //find distance using centre sensor
-  
   timer = (distance - DISPLACEMENT) / SPEED; //calculate time it needs to run at
   
-  
   moveCtrl(FORWARD);               				 	 //move forward
-  
-  
   delay(timer);                              //delay to stop using precalculated time
-  
   moveCtrl(STOP);                            //Stop vehicle
 }
 
@@ -251,11 +253,9 @@ void locate(){
   do
   {
     //drive logic 
-    if(Left > Right){                                       //decide which way to rotate
-    
+    if(Left > Right){    
       moveCtrl(RIGHT);                           						//rotate clockwise
     } else {
-      
       moveCtrl(LEFT);                          							//rotate counter clockwise
     }      
     
@@ -280,11 +280,9 @@ void clampCtrl(boolean dir, int timer){
     digitalWrite (cloPin, HIGH);           //Start opening clamps
     
     if (timer > 0){
-      
       delay(timer);                        //movement time given
-      
     } else {
-      
+    
       while (analogRead(FBStp) < VBS){     //check that the switch has been hit
         delay (READ_DELAY);                //time between checking for whether the switch has been hit
       }
@@ -292,6 +290,7 @@ void clampCtrl(boolean dir, int timer){
     }
     
     digitalWrite (cloPin, LOW);            //Stop opening clamps 
+    
   }
 }
 
@@ -308,7 +307,6 @@ void drillCtrl(){
   digitalWrite (dForPin, LOW);              //stop forward movement of the drill
   delay (50);                               //pause for moment
   digitalWrite (dBakPin, HIGH);             //move drill backwards
-  
   aval = analogRead(FBStp);                 //read the value of the voltage
   
   while (aval > VFS || aval < VBS){         //check that the switch has been hit
@@ -341,8 +339,7 @@ void manualCtrl(){
   digitalWrite(Trigger, LOW);
   moveCtrl(STOP);
   
-  //turn off interrupts
-  noInterrupts();
+  noInterrupts();																												 //turn off interrupts
   
   Serial.println("Entered manual control mode");
   
@@ -350,13 +347,11 @@ void manualCtrl(){
   command = Serial.read();
   
   while(command!='r'){
-    
+  
     switch (command){
-      
       case 'w':
         
         Serial.println("Moving Forward");                                //acknowledge command received
-        
         moveCtrl(FORWARD);                                    					 //set motor control
         
         while(Serial.read()!='s'){                                       //wait for stop signal
@@ -368,7 +363,6 @@ void manualCtrl(){
       case 'a':
         
         Serial.println("Rotating CounterClockwise");                     //acknowledge command received
-        
         moveCtrl(LEFT);                                      						 //set motor values
         
         while(Serial.read()!='s'){                                       //wait for stop signal
@@ -380,7 +374,6 @@ void manualCtrl(){
       case 'd':
       
         Serial.println("Rotating Clockwise");                            //acknowledge command received
-        
         moveCtrl(RIGHT);                                      					 //set motor values
         
         while(Serial.read()!='s'){                                       //wait for stop signal
@@ -392,23 +385,18 @@ void manualCtrl(){
       case 'u':
         
         digitalWrite(driPin, HIGH);                                      //turn drill on
-        
         Serial.println("drill turned on");                               //acknowledge command
-        
         break;
         
       case 'i':
         
         digitalWrite(driPin, LOW);                                       //turn drill off
-        
         Serial.println("Drill turned off");                              //acknowledge command
-        
         break;
         
       case 'o':
         
         Serial.println("Drill moving forward");                          //acknowledge command
-        
         digitalWrite(dForPin, HIGH);                                     //move drill forward
         
         while(analogRead(FBStp) <= VFS && Serial.read() !=' s'){         //wait until the stop switch has been hit or command to stop is given
@@ -421,9 +409,7 @@ void manualCtrl(){
       case 'p':
         
         Serial.println("Drill moving backward");                         //acknowledge command
-        
         digitalWrite(dBakPin, HIGH);                                     //move drill back
-        
         aval = analogRead(FBStp);                                        //read value to check whether the drill has moved back enough
         
         while((aval > VFS || aval < VBS) && Serial.read() !=' s'){       //wait until the stop switch has been hit or command to stop is given
@@ -437,30 +423,28 @@ void manualCtrl(){
       case 'j':
         
         Serial.println("Opening clamps");                                //acknowledge command
-        
         digitalWrite(cloPin, HIGH);                                      //start opening the clamps
         //condition to stop opening
         digitalWrite(cloPin, LOW);                                       //stop opening the clamps
+        
         break;
         
       case 'k':
         
         Serial.println("closing clamps");                                //acknowledge command
-        
         digitalWrite(clcPin, HIGH);                                      //start closing the clamps
         //condition to stop clamp closing
         digitalWrite(clcPin, LOW);                                       //stop closing the clamps
+        
         break;
         
       case 'l':
         
         Serial.println("Rotating ball");                                 //acknowledge command
-        
         digitalWrite(rota, HIGH);                                        //start rotating the ball
-        
         delay(ROTA_TIME);                                                //delay to rotate the ball
-        
         digitalWrite(rota, LOW);                                         //stop rotating the ball
+        
         break;
         
       case 'z':
@@ -504,7 +488,6 @@ void shutdown(){
     digitalWrite(driPin, HIGH);             //drill on
     delay(100);                             //give drill time to pick up speed
     digitalWrite(dBakPin, HIGH);            //move drill backwards
-    
     aval = analogRead(FBStp);               //read the value of the voltage
     
     while(aval > VFS || aval < VBS){        //check that the switch has been hit
