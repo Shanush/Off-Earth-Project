@@ -90,13 +90,6 @@ void manualCtrl(){
   char command;
   
   //turn off all running devices
-  digitalWrite(driPin, LOW);
-  digitalWrite(dForPin, LOW);
-  digitalWrite(dBakPin, LOW);
-  digitalWrite(cloPin, LOW);
-  digitalWrite(clcPin, LOW);
-  digitalWrite(rota, LOW);
-  digitalWrite(Trigger, LOW);
   moveCtrl(STOP);
   
   //turn off interrupts
