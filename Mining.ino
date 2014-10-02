@@ -25,6 +25,14 @@
   v1.0  21/8/14 Write out the basics of the code
 */
 
+//-----------------------------------------------------------------------------------------------------
+//Include
+//-----------------------------------------------------------------------------------------------------
+#include <NewPing.h>
+/*http://playground.arduino.cc/Code/NewPing
+This is a ping library written by Tim Eckel to use the
+HC-S04 ultrasound sensor. The library can return a median
+of pings as well as time in microseconds*/
 
 //-----------------------------------------------------------------------------------------------------
 //Define
@@ -67,10 +75,12 @@ const int clcPin = 3;          //closes the clamp
 const int rota = 5;           //rotate ball motor
 
 //Distance pin
-const int Trigger = A1;        //Triggerger pin as we ran out out digital pins
 const int LRec = A2;           //Left US receiver
 const int CRec = A3;           //Centre US receiver
-const int RRec = A4;           //Right US receiver
+const int RRec = A1;           //Right US receiver
+const int LTrig = A5;          //Left US trigger
+const int CTrig = 6;          //Centre US trigger
+const int RTrig = A4;          //Right US trigger
 
 //Motor Pins
 const int motPin1 = 11;        //motor pin 1 for logic gate
@@ -91,6 +101,11 @@ const int Override = 0;
 int aval;                     //read value of analogue pin
 int movTime;                  //time to move.
 int state;                    //state of the device
+
+//Pings
+NewPing leftPing(LTrig, LRec, 125);
+NewPing cenPing(CTrig, CRec, 125);
+NewPing rightPing(RTrig, RRec, 125);
 
 //Functions                   Pretty much self explanatory, their use is written in the Functions Section
 void clampCtrl(boolean dir, int timer);
@@ -120,19 +135,22 @@ void setup(){
   pinMode(cloPin, OUTPUT);
   pinMode(clcPin, OUTPUT);
   pinMode(rota, OUTPUT);
-  pinMode(Trigger, OUTPUT);
   pinMode(motPin1, OUTPUT);
   pinMode(motPin2, OUTPUT);
   pinMode(motEnable, OUTPUT);
+  pinMode(LTrig, OUTPUT);
+  pinMode(CTrig, OUTPUT);
+  pinMode(RTrig, OUTPUT);
   //set up input pins
   pinMode(LRec, INPUT);
   pinMode(CRec, INPUT);
   pinMode(RRec, INPUT);
   
-  
+  /*
   attachInterrupt(Override, manualCtrl, CHANGE);   //switch to manual control the vehicle
   
   noInterrupts();                                  //disable interrupts as we wait for start signal
+  */
   
   Serial.println("Initialisation Complete");
   Serial.println("Input any key to begin");
@@ -141,7 +159,7 @@ void setup(){
   while(Serial.available()==0){                    //wait until it receives start signal
   }
   
-  interrupts();                                    //enable the interrupt
+  //interrupts();                                  //enable the interrupt
   
   locate();                                        //make sure facing the ball
   
@@ -153,9 +171,9 @@ void setup(){
 //loop function
 void loop (){                                      //loop has been simplified as it may change to manual control
   drillCtrl();                                     //Run the ball drilling function.
-  //clampCtrl(false, 5);                               loosen calmp a bit (maybe).
+  //clampCtrl(false, 5);                           loosen calmp a bit (maybe).
   rotateCtrl();                                    //Run ball rotating process.
-  //clampCtrl(true, 0);                               retighten the clamp.
+  //clampCtrl(true, 0);                            retighten the clamp.
 }
 
 
@@ -164,6 +182,7 @@ void loop (){                                      //loop has been simplified as
 // subroutines
 //-----------------------------------------------------------------------------------------------------
 
+/*old ping code, rendered redundant after the decidion to use the ultrasound ping library.
 float Ping(int echo){
   
   float distance = 0;                       //declare internal variables
@@ -191,32 +210,35 @@ float Ping(int echo){
   
   return distance;                          //return distance in mm
 }
+*/
 
 void moveCtrl(int dir){
-	switch(dir){
-		case FORWARD:
-			
-			digitalWrite(motPin1, HIGH);               //Start all motors
-  		digitalWrite(motPin2, HIGH);
-  		break;
+  switch(dir){
+    case FORWARD:
+	
+      digitalWrite(motPin1, HIGH);              //Both motors on
+      digitalWrite(motPin2, HIGH);
+      break;
   		
-  	case LEFT:
+    case LEFT:
   		
-  		digitalWrite(motPin1, LOW);               //Start all motors
-  		digitalWrite(motPin2, HIGH);
-  		break;
+      digitalWrite(motPin1, LOW);               //Right motor on
+      digitalWrite(motPin2, HIGH);
+      break;
   		
-  	case RIGHT:
+    case RIGHT:
+      digitalWrite(motPin1, HIGH);              //left motor on
+      digitalWrite(motPin2, LOW);
+      break;
   		
-  		digitalWrite(motPin1, HIGH);               //Start all motors
-  		digitalWrite(motPin2, LOW);
-  		break;
+    case STOP:
   		
-  	case STOP:
-  		
-  		digitalWrite(motPin1, LOW);               //Start all motors
-  		digitalWrite(motPin2, LOW);
-  		break;
+      digitalWrite(motPin1, LOW);               //stop both motors
+      digitalWrite(motPin2, LOW);
+      break;
+	  
+    default:
+      break;
   }
 }
 
@@ -233,7 +255,7 @@ void forward(){
   distance = Ping(CRec);                     //find distance using centre sensor
   timer = (distance - DISPLACEMENT) / SPEED; //calculate time it needs to run at
   
-  moveCtrl(FORWARD);               				 	 //move forward
+  moveCtrl(FORWARD);               	     //move forward
   delay(timer);                              //delay to stop using precalculated time
   moveCtrl(STOP);                            //Stop vehicle
 }
@@ -325,6 +347,7 @@ void rotateCtrl(){
   digitalWrite (rota, LOW);                 //Stop turning the ball
 }
 
+/* Remove manual control section as that is causing problems due to Serial usage within the manual control
 //Manual Control of the device
 void manualCtrl(){
   char command;
@@ -477,6 +500,7 @@ void manualCtrl(){
   
   return;
 } 
+*/
 
 //reset the machine and stop movement
 void shutdown(){
@@ -504,5 +528,4 @@ void shutdown(){
   while(0!=1){                              //loops infinitely to stop the machine
   }
 }
-
 
