@@ -17,6 +17,7 @@
   History:
   
   v1.5	13/9/14 Changed the movement to another function of its own
+                fixed up Ping control with the ultrasound library
   v1.4  10/9/14 added manual control to the code.
   v1.3  5/9/14  initial implementation
 		changed ClampControl to boolean
@@ -40,6 +41,8 @@ of pings as well as time in microseconds*/
 //Time delay
 #define ROTA_TIME 700              //time to rotate ball
 #define READ_DELAY 100             //time between read of analogue pins
+#define DRILL_DELAY 100            //time delay for drill to pick up speed
+#define PAUSE 50                   //pause for motor to make sure it stops movement
 //Ball location
 #define DISPLACEMENT 500.0         //displacement of sensor and ball
 #define SPEED 150.0                //define speed of vehicle as mm/ms
@@ -112,7 +115,7 @@ void clampCtrl(boolean dir, int timer);
 void drillCtrl();
 void rotateCtrl();
 void manualCtrl();
-void shutdown();
+void turnOff();
 void locate();
 void forward();
 void moveCtrl(int dir);
@@ -252,7 +255,7 @@ void forward(){
   need to know location of sensor and distance from the edge the ball will be loacted.
   */
   
-  distance = Ping(CRec);                     //find distance using centre sensor
+  distance = cenPing.ping_median() * SOS;    //find distance using centre sensor
   timer = (distance - DISPLACEMENT) / SPEED; //calculate time it needs to run at
   
   moveCtrl(FORWARD);               	     //move forward
@@ -265,12 +268,10 @@ void locate(){
   //declare local variables
   float Left = 0;
   float Right = 0;
-  int SpeRight = 0;
-  int SpeLeft = 0;
   
-  Left = Ping(LRec);                                        //get current readings of distance
-  Right = Ping(RRec);
-
+  Left = leftPing.ping_median() * SOS;                                 //read distance
+  Right = rightPing.ping_median() * SOS;
+  
   //loop until facing the ball properly
   do
   {
@@ -281,8 +282,9 @@ void locate(){
       moveCtrl(LEFT);                          							//rotate counter clockwise
     }      
     
-    Left = Ping(LRec);                                      //get new left values
-    Right = Ping(RRec);                                     //get new right values
+    Left = leftPing.ping_median() * SOS;                                 //read distance
+    Right = rightPing.ping_median() * SOS;
+  
   } while(Left > (Right + 5) || Left < (Right - 5));        //variance of +-5mm as the sensors come with an accuracy of 2%.
   
   moveCtrl(STOP);                             							//Stop all movement
@@ -292,42 +294,36 @@ void locate(){
 void clampCtrl(boolean dir, int timer){
   
   if (dir == true){                        //decide whether to open or close (1 to close, 0 to open).
-  
     digitalWrite (clcPin, HIGH);           //Start closing clamps
     /*method to detect closed*/
     digitalWrite (clcPin, LOW);            //Stop closing clamps
-  
   } else {
-    
     digitalWrite (cloPin, HIGH);           //Start opening clamps
     
     if (timer > 0){
       delay(timer);                        //movement time given
     } else {
-    
       while (analogRead(FBStp) < VBS){     //check that the switch has been hit
         delay (READ_DELAY);                //time between checking for whether the switch has been hit
       }
-      
     }
     
     digitalWrite (cloPin, LOW);            //Stop opening clamps 
-    
   }
 }
 
 void drillCtrl(){
   
   digitalWrite(driPin, HIGH);               //drill on
-  delay(100);                               //give drill time to pick up speed
+  delay(DRILL_DELAY);                       //give drill time to pick up speed
   digitalWrite(dForPin, HIGH);              //drill forward
   
   while (analogRead (FBStp) <= VFS){        //wait until the stop switch has been hit
-    delay (READ_DELAY);                     //time between checking for whether the switch has been hit
+    delay(READ_DELAY);                      //time between checking for whether the switch has been hit
   }
   
   digitalWrite (dForPin, LOW);              //stop forward movement of the drill
-  delay (50);                               //pause for moment
+  delay(PAUSE);                             //pause for moment
   digitalWrite (dBakPin, HIGH);             //move drill backwards
   aval = analogRead(FBStp);                 //read the value of the voltage
   
@@ -347,7 +343,7 @@ void rotateCtrl(){
   digitalWrite (rota, LOW);                 //Stop turning the ball
 }
 
-/* Remove manual control section as that is causing problems due to Serial usage within the manual control
+/* Remove manual control section as that is causing problems due to Serial usage within the interrupt
 //Manual Control of the device
 void manualCtrl(){
   char command;
@@ -484,7 +480,6 @@ void manualCtrl(){
         break;
       
       default:
-        
         break;                                                           //do nothing
         
     }
@@ -493,17 +488,15 @@ void manualCtrl(){
     }
     
     command = Serial.read();                                             //read command
-    
   }
   
   interrupts();
-  
   return;
 } 
 */
 
 //reset the machine and stop movement
-void shutdown(){
+void turnOff(){
   
   aval = analogRead(FBStp);                 //read the value of the voltage
   
