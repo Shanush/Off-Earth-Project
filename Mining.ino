@@ -10,6 +10,10 @@
   have not done testing and do not have the exact values for which the
   vehicle can run at, the code is purely theoretical at the moment.
   
+  Newest version of this code is always stored on Github in my account NoOne2246
+  under Off-Earth-Project as the file Mining.ino
+  https://github.com/NoOne2246/Off-Earth-Project/blob/master/Mining.ino
+  
   Author:
   Christopher Chun-Hung Ho
   z5019205
@@ -43,9 +47,11 @@ of pings as well as time in microseconds*/
 #define READ_DELAY 100             //time between read of analogue pins
 #define DRILL_DELAY 100            //time delay for drill to pick up speed
 #define PAUSE 50                   //pause for motor to make sure it stops movement
+
 //Ball location
 #define DISPLACEMENT 500.0         //displacement of sensor and ball
 #define SPEED 150.0                //define speed of vehicle as mm/ms
+
 //Power Level definition
 #define VFS 700                    //voltage minimum recieve to stop forward
 #define VBS 400                    //voltage minimum recieve to stop backward movement
@@ -144,6 +150,7 @@ void setup(){
   pinMode(LTrig, OUTPUT);
   pinMode(CTrig, OUTPUT);
   pinMode(RTrig, OUTPUT);
+  
   //set up input pins
   pinMode(LRec, INPUT);
   pinMode(CRec, INPUT);
@@ -230,12 +237,13 @@ void moveCtrl(int dir){
       break;
   		
     case RIGHT:
+    
       digitalWrite(motPin1, HIGH);              //left motor on
       digitalWrite(motPin2, LOW);
       break;
   		
     case STOP:
-  		
+    
       digitalWrite(motPin1, LOW);               //stop both motors
       digitalWrite(motPin2, LOW);
       break;
